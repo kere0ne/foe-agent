@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: foe
+      POSTGRES_PASSWORD: foe
+      POSTGRES_DB: foe
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U foe"]
+      interval: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    environment:
+      FOE_DATABASE_URL: postgresql+asyncpg://foe:foe@db:5432/foe
+      FOE_JWT_SECRET: ${FOE_JWT_SECRET:-dev-insecure-change-me}
+      FOE_DATA_DIR: /data
+    volumes:
+      - foe-data:/data
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm install && npm run build && npx serve -s dist -l 5173"
+    volumes:
+      - ./frontend:/app
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  db-data:
+  foe-data:
