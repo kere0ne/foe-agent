@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+from app.db import normalize_database_url  # noqa: E402
 from app.models import Base  # noqa: E402
 
 config = context.config
@@ -18,7 +19,7 @@ if config.config_file_name is not None:
 
 database_url = os.environ.get("FOE_DATABASE_URL")
 if database_url:
-    config.set_main_option("sqlalchemy.url", database_url)
+    config.set_main_option("sqlalchemy.url", normalize_database_url(database_url))
 
 target_metadata = Base.metadata
 

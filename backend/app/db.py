@@ -8,7 +8,16 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_async_engine(settings.database_url, echo=False)
+def normalize_database_url(url: str) -> str:
+    """Map bare postgres URLs to the asyncpg driver; leave everything else alone."""
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    if url.startswith("postgresql://"):
+        return "postgresql+asyncpg://" + url[len("postgresql://"):]
+    return url
+
+
+engine = create_async_engine(normalize_database_url(settings.database_url), echo=False)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
